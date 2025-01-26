@@ -4,11 +4,13 @@ import ir.msv.productstore.data.dto.OrderDTO;
 import ir.msv.productstore.data.entity.Order;
 import ir.msv.productstore.data.entity.Product;
 import ir.msv.productstore.data.repository.OrderRepository;
+import ir.msv.productstore.enumuration.OrderStatus;
 import ir.msv.productstore.exception.AppException;
 import ir.msv.productstore.service.IOrderService;
 import ir.msv.productstore.service.IProductService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,13 +18,14 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements IOrderService {
     private final IProductService productService;
     private final OrderRepository orderRepository;
 
     @Override
     @Transactional
-    public void add(OrderDTO orderDTO) {
+    public OrderDTO add(OrderDTO orderDTO) {
         int count = orderDTO.getCount();
         Product product;
         try {
@@ -30,10 +33,10 @@ public class OrderServiceImpl implements IOrderService {
                     orderDTO.getProductSerialNumber()
             );
         } catch (AppException e) {
-            rejectOrder(
-                    orderDTO
+            return rejectOrder(
+                    orderDTO,
+                    e.getMessage()
             );
-            return;
         }
         int productCount = product.getCount();
         if (productCount >= count) {
@@ -51,14 +54,27 @@ public class OrderServiceImpl implements IOrderService {
                             )
                             .build()
             );
+            orderDTO.setStatus(
+                    OrderStatus.REGISTERED
+            );
+            return orderDTO;
         } else {
-            rejectOrder(
-                    orderDTO
+            return rejectOrder(
+                    orderDTO,
+                    "not enough"
             );
         }
     }
 
-    private void rejectOrder(OrderDTO orderDTO) {
-
+    private OrderDTO rejectOrder(OrderDTO orderDTO, String reason) {
+        log.error(
+                "... reject the order with {} serialnumber because '{}' ...",
+                orderDTO.getSerialNumber(),
+                reason
+        );
+        orderDTO.setStatus(
+                OrderStatus.CANCELED
+        );
+        return orderDTO;
     }
 }

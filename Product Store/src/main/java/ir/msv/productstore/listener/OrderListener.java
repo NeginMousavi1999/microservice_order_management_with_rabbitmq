@@ -1,12 +1,18 @@
 package ir.msv.productstore.listener;
 
+import com.rabbitmq.client.Channel;
 import ir.msv.productstore.data.dto.OrderDTO;
 import ir.msv.productstore.service.IOrderService;
 import ir.msv.productstore.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.stereotype.Component;
+
+import java.util.Objects;
 
 /**
  * @author Negin Mousavi 1/25/2025 - Saturday
@@ -14,22 +20,33 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class OrderListener {
-    private final Consumer orderConsumer;
-    private final IOrderService orderService;
+public class OrderListener implements ChannelAwareMessageListener {
 
-    @Scheduled(cron = "0 * * * * *")
-    public void receiveOrders() {
-        String json = orderConsumer.consume();
-        if (json == null) {
-            log.debug("... no order ...");
-        } else {
-            orderService.add(
-                    JsonUtil.fromJson(
-                            json,
-                            OrderDTO.class
-                    )
-            );
-        }
+    private final IOrderService orderService;
+    private final RabbitTemplate rabbitTemplate;
+
+    @Override
+    @RabbitListener(queues = "order_queue", ackMode = "MANUAL")
+    public void onMessage(Message message, Channel channel) throws Exception {
+        OrderDTO orderDTO = orderService.add(
+                JsonUtil.fromJson(
+                        new String(
+                                message.getBody()
+                        ),
+                        OrderDTO.class
+                )
+        );
+        Objects.requireNonNull(channel).basicAck(
+                message
+                        .getMessageProperties()
+                        .getDeliveryTag(),
+                false
+        );
+        rabbitTemplate.convertAndSend(
+                "reply-queue",
+                JsonUtil.toJson(
+                        orderDTO
+                )
+        );
     }
 }

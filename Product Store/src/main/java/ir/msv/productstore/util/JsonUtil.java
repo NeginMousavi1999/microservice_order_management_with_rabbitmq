@@ -2,6 +2,7 @@ package ir.msv.productstore.util;
 
 import com.google.gson.Gson;
 import lombok.experimental.UtilityClass;
+import org.json.JSONObject;
 
 /**
  * @author Negin Mousavi 1/25/2025 - Saturday
@@ -13,5 +14,9 @@ public class JsonUtil {
                 json,
                 tClass
         );
+    }
+
+    public <T> String toJson(T pojo) {
+        return new JSONObject(pojo).toString();
     }
 }
