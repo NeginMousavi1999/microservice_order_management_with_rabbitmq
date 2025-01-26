@@ -4,6 +4,7 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,9 +18,17 @@ public class RabbitConfiguration {
     private String queueName;
 
     @Bean
-    Queue queue() {
+    Queue sendingQueue() {
         return new Queue(
                 queueName,
+                true
+        );
+    }
+
+    @Bean
+    Queue receivingQueue() {
+        return new Queue(
+                "reply-queue",
                 true
         );
     }
@@ -32,9 +41,24 @@ public class RabbitConfiguration {
     }
 
     @Bean
-    Binding binding(Queue queue, FanoutExchange fanoutExchange) {
+    public Binding bindingSend() {
         return BindingBuilder
-                .bind(queue)
-                .to(fanoutExchange);
+                .bind(
+                        sendingQueue()
+                )
+                .to(
+                        fanoutExchange()
+                );
+    }
+
+    @Bean
+    public Binding bindingReceive() {
+        return BindingBuilder
+                .bind(
+                        receivingQueue()
+                )
+                .to(
+                        fanoutExchange()
+                );
     }
 }

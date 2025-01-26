@@ -9,6 +9,7 @@ import lombok.Getter;
 public enum OrderStatus {
     WAITING_FOR_REGISTRATION("در انتظار ثبت"),
     REGISTERED("ثبت شده"),
+    CANCELED("کنسل شده")
     ;
     private final String abbr;
 

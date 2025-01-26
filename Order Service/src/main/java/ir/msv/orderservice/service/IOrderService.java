@@ -8,5 +8,7 @@ import ir.msv.orderservice.data.dto.OrderDTO;
 public interface IOrderService {
     OrderDTO add(OrderDTO orderDTO);
 
-    OrderDTO getBySerialNumber(String serialNumber);
+    String getStatus(String serialNumber);
+
+    void updateState(OrderDTO orderDTO);
 }

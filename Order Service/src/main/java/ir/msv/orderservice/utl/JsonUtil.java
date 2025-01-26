@@ -1,5 +1,6 @@
 package ir.msv.orderservice.utl;
 
+import com.google.gson.Gson;
 import lombok.experimental.UtilityClass;
 import org.json.JSONObject;
 
@@ -10,5 +11,12 @@ import org.json.JSONObject;
 public class JsonUtil {
     public <T> String toJson(T pojo) {
         return new JSONObject(pojo).toString();
+    }
+
+    public <T> T fromJson(String json, Class<T> tClass) {
+        return new Gson().fromJson(
+                json,
+                tClass
+        );
     }
 }

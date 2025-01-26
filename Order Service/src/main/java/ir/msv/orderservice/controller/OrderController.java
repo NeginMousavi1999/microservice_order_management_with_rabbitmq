@@ -14,10 +14,10 @@ public class OrderController {
 
     private final IOrderService orderService;
 
-    @GetMapping("{serialNumber}")
-    public ResponseEntity<OrderDTO> get(@PathVariable String serialNumber) {
+    @GetMapping("/status/{serialNumber}")
+    public ResponseEntity<String> get(@PathVariable String serialNumber) {
         return new ResponseEntity<>(
-                orderService.getBySerialNumber(serialNumber),
+                orderService.getStatus(serialNumber),
                 HttpStatus.OK
         );
     }
